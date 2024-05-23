@@ -13,8 +13,15 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float playerSpeed = 6f;
 
     private Vector3 inputValue;
+    private Vector2 inputVector;
 
     [SerializeField] private float jumpHeight = 5f;
+
+    [SerializeField] private Transform transformRayStart;
+    [SerializeField] private float rayLength = 0.5f;
+    [SerializeField] private LayerMask layerGroundCheck;
+
+    [SerializeField] private float maxAngleSlope = 20f;
 
     void Start()
     {
@@ -24,7 +31,14 @@ public class PlayerMovement : MonoBehaviour
 
      private void FixedUpdate()
     {
-        playerRigidbody.velocity = new Vector3(inputValue.x * playerSpeed, playerRigidbody.velocity.y, inputValue.z * playerSpeed);
+        if (SlopeCheck())
+        {
+            playerRigidbody.velocity = new Vector3(inputValue.x * playerSpeed, playerRigidbody.velocity.y, inputValue.z * playerSpeed);
+        }
+        else
+        {
+            inputVector = Vector2.zero;
+        }
     }
 
     private void OnMove(InputValue context)
@@ -34,7 +48,10 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnJump()
     {
-        playerRigidbody.velocity = new Vector3(playerRigidbody.velocity.x, jumpHeight, playerRigidbody.velocity.z);
+        if (GroundCheck())
+        {
+            playerRigidbody.velocity = new Vector3(playerRigidbody.velocity.x, jumpHeight, playerRigidbody.velocity.z);
+        }
     }
 
     void OnSneak(InputValue inputVal)
@@ -66,5 +83,28 @@ public class PlayerMovement : MonoBehaviour
         {
             playerSpeed = defaultSpeed;
         }
+    }
+
+    bool GroundCheck()
+    {
+        return Physics.Raycast(transformRayStart.position, Vector3.down, rayLength, layerGroundCheck);
+    }
+
+    bool SlopeCheck()
+    {
+        RaycastHit hit;
+
+        Physics.Raycast(transformRayStart.position, Vector3.down, out hit, rayLength, layerGroundCheck);
+
+        if (hit.collider != null)
+        {
+            float angle = Vector3.Angle(Vector3.up, hit.normal);
+            Debug.Log(angle);
+            if (angle > maxAngleSlope)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 }
