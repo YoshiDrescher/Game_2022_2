@@ -22,4 +22,9 @@ public class SimpleEnemyBehaviour : MonoBehaviour
     {
         agent.SetDestination(agentTarget.position);
     }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        
+    }
 }
