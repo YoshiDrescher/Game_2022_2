@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
+    [Header("Movement")]
     private Rigidbody playerRigidbody;
     private float movingSpeed = 6f;
     [SerializeField] private float sneakingSpeed = 6f;
@@ -12,16 +13,19 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float sprintingSpeed = 6f;
     [SerializeField] private float playerSpeed = 6f;
 
-    private Vector3 inputValue;
-    private Vector2 inputVector;
+    private Vector3 inputVector;
 
     [SerializeField] private float jumpHeight = 5f;
 
+    [Header("Ground Check")]
     [SerializeField] private Transform transformRayStart;
     [SerializeField] private float rayLength = 0.5f;
     [SerializeField] private LayerMask layerGroundCheck;
 
+    [Header("Slope Check")]
     [SerializeField] private float maxAngleSlope = 20f;
+
+    [Header("Camera Control")]
     [SerializeField] Transform transformCameraFollow;
     [SerializeField] float rotateSensivity = 1f;
     private float cameraPitch = 0f;
@@ -29,6 +33,8 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float maxCameraPitch = 60f;
     [SerializeField] bool invertCameraPitch = false;
 
+    [Header("Character Rotation")]
+    [SerializeField] private Transform characterBody;
 
     void Start()
     {
@@ -66,11 +72,23 @@ public class PlayerMovement : MonoBehaviour
             Debug.Log("Rotation y CameraFollowObject: " + transformCameraFollow.eulerAngles.y);
             Debug.Log("current inputVector " + inputVector);
 
-            Vector3 movementDirection = Quaternion.AngleAxis(transformCameraFollow.eulerAngles.y, Vector3.up) * inputVector;
+            Vector3 movementDirection = new Vector3(inputVector.x * playerSpeed, playerRigidbody.velocity.y, inputVector.z * playerSpeed);
+
+            movementDirection = Quaternion.AngleAxis(transformCameraFollow.eulerAngles.y, Vector3.up) * movementDirection;
 
             Debug.Log("rotated MovementVector: " + movementDirection);
 
-            playerRigidbody.velocity = new Vector3(inputValue.x * playerSpeed, playerRigidbody.velocity.y, inputValue.z * playerSpeed);
+            playerRigidbody.velocity = movementDirection;
+            //playerRigidbody.velocity = new Vector3(inputValue.x * playerSpeed, playerRigidbody.velocity.y, inputValue.z * playerSpeed);
+
+            if (movementDirection != Vector3.zero)
+            {
+                Vector3 lookdirection = movementDirection;
+                lookdirection.y = 0f;
+                characterBody.rotation = Quaternion.LookRotation(lookdirection);
+            }
+            
+
         }
         else
         {
@@ -80,7 +98,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnMove(InputValue context)
     {
-        inputValue = context.Get<Vector3>();
+        inputVector = context.Get<Vector3>();
     }
 
     private void OnJump()
